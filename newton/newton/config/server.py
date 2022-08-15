@@ -39,10 +39,20 @@ DATABASES = {
 }
 
 CURRENT_NET = 'TestNet'
-CHAIN_ID = 1007
-NEWCHAIN_RPC_URL = "https://rpc1.newchain.newtonproject.org/"
-
-
+DEFAULT_CHAIN_ID = 1007
+CHAIN_ID = [1007, 1012]
+RPC_URL = {
+    1007: "https://rpc1.newchain.newtonproject.org/",
+    1012: ""
+}
+NFT_CONTRACT_ADDRESS = {
+    1007: "0xFD1d4413030c39758Afd48b34b839BFe265FD9D9",
+    1012: ""
+}
+ENCRYPTION_CONTRACT_ADDRESS = {
+    1007: "0x66fE876AD7C00319aF3030D3736A6D921CDF744B",
+    1012: ""
+}
 
 # Logging
 system_string = platform.system()

@@ -58,7 +58,7 @@ class Transaction(rlp.Serializable):
     ]
 
 
-chainID = settings.CHAIN_ID
+chainID = settings.DEFAULT_CHAIN_ID
 PREFIX = 'NEW'
 
 
@@ -73,6 +73,7 @@ def address_encode(address_data):
     data = base58.b58encode_check(b'\0' + binascii.a2b_hex(num_sum))
     new_address = PREFIX + data.decode()
     return new_address
+
 
 def newid_encode_by_public_key(public_key):
     if public_key.startswith('0x'):
@@ -90,6 +91,7 @@ def newid_encode_by_public_key(public_key):
     newid = PREFIX + 'ID' + data.decode()
     return newid
 
+
 def newid_encode(address):
     if address.startswith('0x'):
         address = address[2:]
@@ -100,6 +102,7 @@ def newid_encode(address):
     data = base58.b58encode_check(b'\0' + binascii.a2b_hex(num_sum))
     newid = PREFIX + 'ID' + data.decode()
     return newid
+
 
 def b58check_decode(new_address):
     """ Decoding function """
@@ -113,6 +116,7 @@ def b58check_decode(new_address):
     except Exception as e:
         logger.error("b58check_decode error for newaddress: %s error: %s" % (new_address, str(e)))
         return None
+
 
 def newid_decode(newid):
     """ NewID decoding function """
@@ -141,13 +145,14 @@ def new_address_to_hex_address(new_address):
     return "0x%s" % base58.b58decode_check(new_address[3:]).hex().lower()[6:]
 
 
-def send_raw_transaction(raw, rpc_url=settings.NEWCHAIN_RPC_URL, wait_mining=False):
+def send_raw_transaction(raw, chain_id=1007, wait_mining=False):
     """Send the raw transaction
     :param string raw: raw transaction
     :return: transaction id
     :rtype: string
     """
     try:
+        rpc_url = settings.RPC_URL[chain_id]
         provider = Web3.HTTPProvider(rpc_url)
         w3 = Web3(provider)
         txid = w3.eth.sendRawTransaction(raw)
@@ -160,13 +165,14 @@ def send_raw_transaction(raw, rpc_url=settings.NEWCHAIN_RPC_URL, wait_mining=Fal
         return ''
 
 
-def check_transaction_status(txid: HexStr, rpc_url=settings.NEWCHAIN_RPC_URL):
+def check_transaction_status(txid: HexStr, chain_id=1007):
     """ Check transaction status
     :param string txid: transaction hash
     :return: transaction id
     :rtype: string
     """
     try:
+        rpc_url = settings.RPC_URL[chain_id]
         provider = Web3.HTTPProvider(rpc_url)
         w3 = Web3(provider)
         receipt = w3.eth.waitForTransactionReceipt(txid)
@@ -176,13 +182,14 @@ def check_transaction_status(txid: HexStr, rpc_url=settings.NEWCHAIN_RPC_URL):
         return False
 
 
-def get_transaction_receipt(txid, rpc_url=settings.NEWCHAIN_RPC_URL):
+def get_transaction_receipt(txid, chain_id=1007):
     """Get the receipt of transaction
     :param string txid:  transaction id
     :return: status
     :rtype: bool
     """
     try:
+        rpc_url = settings.RPC_URL[chain_id]
         provider = Web3.HTTPProvider(rpc_url)
         w3 = Web3(provider)
         response = w3.eth.getTransactionReceipt(txid)
@@ -193,14 +200,15 @@ def get_transaction_receipt(txid, rpc_url=settings.NEWCHAIN_RPC_URL):
         return False
 
 
-def get_public_key_by_newid_contract(unencoded_newid, rpc_url=settings.NEWCHAIN_RPC_URL):
+def get_public_key_by_newid_contract(unencoded_newid, chain_id=1007):
     """Query the public key by given newid in onchain contract
-    :param string unencoded_newid:  unencoded newid 
+    :param string unencoded_newid:  unencoded newid
     :return: public key
     :rtype: string
     """
     try:
         identity = unencoded_newid
+        rpc_url = settings.RPC_URL[chain_id]
         provider = Web3.HTTPProvider(rpc_url)
         w3 = Web3(provider)
         # inject the poa compatibility middleware to the innermost layer
@@ -229,18 +237,8 @@ def get_public_key_by_newid_contract(unencoded_newid, rpc_url=settings.NEWCHAIN_
         return ''
 
 
-def send_raw_transaction_dummy(raw, rpc_url=settings.NEWCHAIN_RPC_URL):
-    """Send the dummy raw transaction, only for unit testing 
-    :param string raw: raw transaction
-    :return: transaction id
-    :rtype: string
-    """
-    import random
-    return '0x09cb88c164c79d61b3e17470f633c556dc5d42d13c2368b83dedd27584%s' % random.randint(100000,999999)
-
-
 def add_bigint(a, b):
-    """Add operation for bigint 
+    """Add operation for bigint
     :param string a: a
     :param string b: b
     :return: sum string
@@ -270,13 +268,3 @@ def parse_raw_transaction(raw_transaction):
     except Exception as e:
         logger.exception('fail to parse raw transaction:%s' % str(e))
         return None
-
-
-
-if __name__ == "__main__":
-    address_data = '0xBBaC0fEBD7F42aC11BCE39e2f49A5EfbA73899B6'
-    new_address = address_encode(address_data)
-    print(new_address)
-    decode_result = b58check_decode('NEW132AYrd4F2jVXhUddYJqT16KRN8LYN3MCHRie')
-    print(decode_result)
-    #print(parse_raw_transaction('0xf86a0a6483015f909414aa5732a2833143e8a552307137122a7b83954e880de0b6b3a7640000808207f8a0a498d321d46a02e6420328ac3408b42e0a2ae0dea136d1fb628f8372cc2cb535a006ff7b94e0ade5068d44c7550d7008871c02d610715d5d4726b6cec5b1e7fbbf'))

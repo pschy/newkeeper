@@ -13,7 +13,7 @@ from django.conf import settings
 
 class GeneratorForm(forms.Form):
     prime = forms.CharField(required=True, max_length=512)
-    peer_public_key = forms.CharField(required=True, max_length=512)
+    peer_swap_key = forms.CharField(required=True, max_length=512)
 
 
 class BindForm(forms.Form):
@@ -31,7 +31,7 @@ class BindForm(forms.Form):
 class GetForm(forms.Form):
     key_id = forms.CharField(required=True, max_length=512)
     prime = forms.CharField(required=True, max_length=512)
-    peer_public_key = forms.CharField(required=True, max_length=512)
+    peer_swap_key = forms.CharField(required=True, max_length=512)
     sign_r = forms.CharField(required=True, max_length=66)
     sign_s = forms.CharField(required=True, max_length=66)
     sign_v = forms.CharField(required=True, max_length=66)

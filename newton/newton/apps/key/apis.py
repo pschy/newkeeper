@@ -31,14 +31,14 @@ def api_generator(request, version):
             logger.error('validate error:%s' % form.errors)
             return http.JsonErrorResponse(error_message='validate error')
         prime = form.cleaned_data["prime"]
-        peer_public_key = form.cleaned_data["peer_public_key"]
+        peer_swap_key = form.cleaned_data["peer_swap_key"]
 
         dh_node = DiffieHellman(prime, DEFAULT_DH_GENERATOR)
-        node_public_key = dh_node.public_key
-        shared_secret = dh_node.getSharedSecret(peer_public_key)
+        node_swap_key = dh_node.public_key
+        shared_secret = dh_node.getSharedSecret(peer_swap_key)
         node_secret = hex(shared_secret)
 
-        key_id = security.generate_digest_sha256(peer_public_key)
+        key_id = security.generate_digest_sha256(peer_swap_key)
         key_obj = key_models.KeyList.objects.filter(key_id=key_id).first()
         if not key_obj:
             key_models.KeyList.objects.create(
@@ -49,7 +49,7 @@ def api_generator(request, version):
             return http.JsonErrorResponse(error_message='key already exist')
 
         data = {
-            "node_public_key": node_public_key,
+            "node_swap_key": node_swap_key,
         }
         return http.JsonSuccessResponse(data=data)
     except Exception as e:
@@ -59,37 +59,46 @@ def api_generator(request, version):
 
 def api_bind(request, version):
     try:
-        form = key_forms.BindForm(request.POST)
+        sign_data = request.POST.get('sign_data', None)
+        if not sign_data:
+            return http.JsonErrorResponse(error_message='validate error')
+        form_data = key_services.decode_bind_params(sign_data)
+        form = key_forms.BindForm(form_data)
         if not form.is_valid():
             logger.error('validate error:%s' % form.errors)
             return http.JsonErrorResponse(error_message='validate error')
+
         key_id = form.cleaned_data["key_id"]
         contract_address = form.cleaned_data["contract_address"]
         token_id = form.cleaned_data["token_id"]
-        chain_id = settings.CHAIN_ID if not form.cleaned_data["chain_id"] else form.cleaned_data["chain_id"]
+        chain_id = settings.DEFAULT_CHAIN_ID if not form.cleaned_data["chain_id"] else int(form.cleaned_data["chain_id"])
         private_key = form.cleaned_data["private_key"]
         sign_r = form.cleaned_data["sign_r"]
         sign_s = form.cleaned_data["sign_s"]
         sign_v = form.cleaned_data["sign_v"]
-        sign_message = form.cleaned_data["sign_message"]
+        message = form.cleaned_data["sign_message"]
 
+        if chain_id not in settings.CHAIN_ID:
+            return http.JsonErrorResponse(error_message='chainId error')
         key_obj = key_models.KeyList.objects.filter(key_id=key_id).first()
         if not key_obj:
             return http.JsonErrorResponse(error_message='key is not exist')
-        encrypt_key = security.aes_decrypt(key_obj.encrypt_key[2:32], private_key)
+        if key_obj.bind_status == 1:
+            return http.JsonErrorResponse(error_message='this key have bound')
 
-        sign_message = json.loads(sign_message)
-        sign_message = encode_structured_data(primitive=sign_message)
-        w3 = newton_web3.get_web3()
+        w3 = newton_web3.get_web3(chain_id)
         vrs = (sign_v, sign_r, sign_s)
+        sign_message = encode_defunct(text=message)
         hex_address = w3.eth.account.recover_message(sign_message, vrs=vrs)
+        # print('hex_address:', hex_address)
         if not hex_address:
             return http.JsonErrorResponse(error_message='recover message error')
 
-        res = key_services.check_owner(hex_address, contract_address, token_id)
+        res, errmsg = key_services.check_permission(hex_address, key_id, token_id, chain_id)
         if not res:
-            return http.JsonErrorResponse(error_message='check owner failed')
+            return http.JsonErrorResponse(error_message=errmsg)
 
+        encrypt_key = security.aes_decrypt(key_obj.encrypt_key[2:32], private_key)
         key_obj.contract_address = contract_address.lower()
         key_obj.token_id = str(token_id)
         key_obj.chain_id = chain_id
@@ -103,44 +112,48 @@ def api_bind(request, version):
         return http.JsonErrorResponse()
 
 
-def api_get(request, version, symbol):
+def api_get(request, version):
     try:
-        form = key_forms.CheckForm(request.POST)
+        sign_data = request.POST.get('sign_data', None)
+        if not sign_data:
+            return http.JsonErrorResponse(error_message='validate error')
+        form_data = key_services.decode_get_params(sign_data)
+        form = key_forms.GetForm(form_data)
         if not form.is_valid():
             logger.error('validate error:%s' % form.errors)
             return http.JsonErrorResponse(error_message='validate error')
 
         key_id = form.cleaned_data["key_id"]
         prime = form.cleaned_data["prime"]
-        peer_public_key = form.cleaned_data["peer_public_key"]
+        peer_swap_key = form.cleaned_data["peer_swap_key"]
         sign_r = form.cleaned_data["sign_r"]
         sign_s = form.cleaned_data["sign_s"]
         sign_v = form.cleaned_data["sign_v"]
-        sign_message = form.cleaned_data["sign_message"]
+        message = form.cleaned_data["sign_message"]
 
         key_obj = key_models.KeyList.objects.filter(key_id=key_id).first()
         if not key_obj:
             return http.JsonErrorResponse(error_message='key is not exist')
 
-        sign_message = json.loads(sign_message)
-        sign_message = encode_structured_data(primitive=sign_message)
-        w3 = newton_web3.get_web3()
+        chain_id = int(key_obj.chain_id)
+        w3 = newton_web3.get_web3(chain_id)
         vrs = (sign_v, sign_r, sign_s)
+        sign_message = encode_defunct(text=message)
         hex_address = w3.eth.account.recover_message(sign_message, vrs=vrs)
         if not hex_address:
             return http.JsonErrorResponse(error_message='recover message error')
 
-        res = key_services.check_owner(hex_address, contract_address, token_id)
+        res, errmsg = key_services.check_permission(hex_address, key_obj.key_id, key_obj.token_id, key_obj.chain_id)
         if not res:
-            return http.JsonErrorResponse(error_message='check failed')
+            return http.JsonErrorResponse(error_message=errmsg)
 
         dh_node = DiffieHellman(prime, DEFAULT_DH_GENERATOR)
-        node_public_key = dh_node.public_key
-        shared_secret = dh_node.getSharedSecret(peer_public_key)
+        node_swap_key = dh_node.public_key
+        shared_secret = dh_node.getSharedSecret(peer_swap_key)
         node_secret = hex(shared_secret)
 
         data = {
-            'node_public_key': node_public_key,
+            'node_swap_key': node_swap_key,
             'private_key': security.aes_encrypt(node_secret[2:32], key_obj.encrypt_key)
         }
 
