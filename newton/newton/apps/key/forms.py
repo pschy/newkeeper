@@ -19,8 +19,10 @@ class GeneratorForm(forms.Form):
 class BindForm(forms.Form):
     key_id = forms.CharField(required=True, max_length=512)
     contract_address = forms.CharField(required=True, max_length=128)
+    nft_contract_address = forms.CharField(required=True, max_length=128)
     token_id = forms.CharField(required=True, max_length=64)
     chain_id = forms.CharField(required=False, max_length=64)
+    rpc_url = forms.CharField(required=True, max_length=512)
     private_key = forms.CharField(required=True, max_length=1024)
     sign_r = forms.CharField(required=True, max_length=66)
     sign_s = forms.CharField(required=True, max_length=66)

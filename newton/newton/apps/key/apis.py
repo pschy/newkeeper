@@ -63,45 +63,48 @@ def api_bind(request, version):
         if not sign_data:
             return http.JsonErrorResponse(error_message='validate error')
         form_data = key_services.decode_bind_params(sign_data)
+        if not form_data:
+            return http.JsonErrorResponse(error_message='rlp data error')
         form = key_forms.BindForm(form_data)
         if not form.is_valid():
             logger.error('validate error:%s' % form.errors)
             return http.JsonErrorResponse(error_message='validate error')
 
         key_id = form.cleaned_data["key_id"]
+        rpc_url = form.cleaned_data["rpc_url"]
         contract_address = form.cleaned_data["contract_address"]
+        nft_contract_address = form.cleaned_data["nft_contract_address"]
         token_id = form.cleaned_data["token_id"]
-        chain_id = settings.DEFAULT_CHAIN_ID if not form.cleaned_data["chain_id"] else int(form.cleaned_data["chain_id"])
+        chain_id = settings.CHAIN_ID if not form.cleaned_data["chain_id"] else int(form.cleaned_data["chain_id"])
         private_key = form.cleaned_data["private_key"]
         sign_r = form.cleaned_data["sign_r"]
         sign_s = form.cleaned_data["sign_s"]
         sign_v = form.cleaned_data["sign_v"]
         message = form.cleaned_data["sign_message"]
 
-        if chain_id not in settings.CHAIN_ID:
-            return http.JsonErrorResponse(error_message='chainId error')
         key_obj = key_models.KeyList.objects.filter(key_id=key_id).first()
         if not key_obj:
             return http.JsonErrorResponse(error_message='key is not exist')
         if key_obj.bind_status == 1:
             return http.JsonErrorResponse(error_message='this key have bound')
 
-        w3 = newton_web3.get_web3(chain_id)
+        w3 = newton_web3.get_web3(rpc_url)
         vrs = (sign_v, sign_r, sign_s)
         sign_message = encode_defunct(text=message)
         hex_address = w3.eth.account.recover_message(sign_message, vrs=vrs)
         # print('hex_address:', hex_address)
         if not hex_address:
             return http.JsonErrorResponse(error_message='recover message error')
-
-        res, errmsg = key_services.check_permission(hex_address, key_id, token_id, chain_id)
+        res, errmsg = key_services.check_permission(hex_address, key_id, token_id, rpc_url, nft_contract_address, contract_address)
         if not res:
             return http.JsonErrorResponse(error_message=errmsg)
 
         encrypt_key = security.aes_decrypt(key_obj.encrypt_key[2:32], private_key)
         key_obj.contract_address = contract_address.lower()
+        key_obj.nft_contract_address = nft_contract_address.lower()
         key_obj.token_id = str(token_id)
         key_obj.chain_id = chain_id
+        key_obj.rpc_url = rpc_url
         key_obj.encrypt_key = encrypt_key
         key_obj.bind_status = 1
         key_obj.save()
@@ -118,6 +121,8 @@ def api_get(request, version):
         if not sign_data:
             return http.JsonErrorResponse(error_message='validate error')
         form_data = key_services.decode_get_params(sign_data)
+        if not form_data:
+            return http.JsonErrorResponse(error_message='rlp data error')
         form = key_forms.GetForm(form_data)
         if not form.is_valid():
             logger.error('validate error:%s' % form.errors)
@@ -135,15 +140,16 @@ def api_get(request, version):
         if not key_obj:
             return http.JsonErrorResponse(error_message='key is not exist')
 
-        chain_id = int(key_obj.chain_id)
-        w3 = newton_web3.get_web3(chain_id)
+        rpc_url = key_obj.rpc_url
+        w3 = newton_web3.get_web3(rpc_url)
         vrs = (sign_v, sign_r, sign_s)
         sign_message = encode_defunct(text=message)
         hex_address = w3.eth.account.recover_message(sign_message, vrs=vrs)
         if not hex_address:
             return http.JsonErrorResponse(error_message='recover message error')
 
-        res, errmsg = key_services.check_permission(hex_address, key_obj.key_id, key_obj.token_id, key_obj.chain_id)
+        res, errmsg = key_services.check_permission(hex_address, key_obj.key_id, key_obj.token_id, 
+                key_obj.rpc_url, key_obj.nft_contract_address, key_obj.contract_address)
         if not res:
             return http.JsonErrorResponse(error_message=errmsg)
 

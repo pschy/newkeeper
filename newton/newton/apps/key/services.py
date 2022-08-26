@@ -27,8 +27,10 @@ class BindParams(rlp.Serializable):
     fields = [
         ('key_id', binary),
         ('contract_address', binary),
+        ('nft_contract_address', binary),
         ('token_id', big_endian_int),
         ('chain_id', big_endian_int),
+        ('rpc_url', binary),
         ('private_key', binary),
         ('v', big_endian_int),
         ('r', big_endian_int),
@@ -57,8 +59,10 @@ def decode_bind_params(sign_data):
         form_data = {
             'key_id': rlp_data.key_id.decode(),
             'contract_address': rlp_data.contract_address.decode(),
+            'nft_contract_address': rlp_data.nft_contract_address.decode(),
             'token_id': rlp_data.token_id,
             'chain_id': rlp_data.chain_id,
+            'rpc_url': rlp_data.rpc_url.decode(),
             'private_key': rlp_data.private_key.decode(),
             'sign_v': rlp_data.v,
             'sign_r': hex(rlp_data.r),
@@ -91,32 +95,20 @@ def decode_get_params(sign_data):
         return False
 
 
-def check_permission(hex_address, key_id, token_id, chain_id):
+def check_permission(hex_address, key_id, token_id, rpc_url, nft_contract, evt_contract):
     try:
-        token_id = int(token_id)
-        chain_id = int(chain_id)
-        w3 = newton_web3.get_web3(chain_id)
-        w3.eth.account.chain_id = chain_id
+        w3 = newton_web3.get_web3(rpc_url)
         if not w3:
             return False, 'chainId error'
 
-        nft_contract_address = w3.toChecksumAddress(settings.NFT_CONTRACT_ADDRESS[chain_id])
-        encryption_contract_address = w3.toChecksumAddress(settings.ENCRYPTION_CONTRACT_ADDRESS[chain_id])
-        hex_address = w3.toChecksumAddress(hex_address)
+        token_id = int(token_id)
+        hex_address = hex_address.lower()
 
-        f = open("contracts/Nft.json")
-        nft_abi = json.load(f)
-        f.close()
-        nftContract = w3.eth.contract(address=nft_contract_address, abi=nft_abi)
-        nft_balance = nftContract.functions.balanceOf(hex_address).call()
+        nft_balance = newton_web3.get_contracts_balance(rpc_url, hex_address, nft_contract)
         if int(nft_balance) <= 0:
             return False, 'nft balance error'
 
-        f = open("contracts/Encryption.json")
-        key_abi = json.load(f)
-        f.close()
-        encryptionContract = w3.eth.contract(address=encryption_contract_address, abi=key_abi)
-        result = encryptionContract.functions.hasPermission(token_id, key_id, hex_address).call()
+        result = newton_web3.has_permission(rpc_url, hex_address, token_id, key_id, evt_contract)
         if not result:
             return False, 'permission error'
 

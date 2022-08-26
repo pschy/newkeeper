@@ -32,9 +32,9 @@ class Command(BaseCommand):
         signable_message = encode_defunct(text=message)
         signed_message = w3.eth.account.sign_message(signable_message, private_key=wallet_private_key)
 
-        key_id = '39d9403f502e6c4d14fab1733a27b6712029a392f34462b92a3f8a1b626cc972'
-        encrypt_key = '75d78bdb89dd0baeaeacdbef66ba4240'
-        shared_secret = '0x3c6ed3a0d88d664f418158d413dfb2aa655bcb306ccf4f5f14df12f2f55be8a3d1db4cd0707bc5e5236ffb3eddbd55bccaa39d4f03099d4955941f0fe105488927a2'
+        key_id = 'ab0282f22fc421c5bfe60a77b92692a06af7a14ae205ea424348352d368ae9d7'
+        encrypt_key = 'd41d8cd98f00b204e9800998ecf8427e'
+        shared_secret = '0x7f1f94707dddd6cd5d7e0092b0031c32ea55519265914806b3c60187c271cb848fb69deb82f895ef37392e9d5f3b7c3ac230265897b77ff15beb110bf082fcf8'
         private_key = security.aes_encrypt(shared_secret[2:32], encrypt_key)
         bindParams = BindParams(
             key_id=bytes(key_id, encoding='utf-8'),
@@ -43,7 +43,9 @@ class Command(BaseCommand):
             v=signed_message.v,
             private_key=bytes(private_key, encoding='utf-8'),
             message=bytes(message, encoding='utf-8'),
-            contract_address=bytes('0xFD1d4413030c39758Afd48b34b839BFe265FD9D9', encoding='utf-8'),
+            contract_address=bytes('0x66fE876AD7C00319aF3030D3736A6D921CDF744B', encoding='utf-8'),
+            nft_contract_address=bytes('0xFD1d4413030c39758Afd48b34b839BFe265FD9D9', encoding='utf-8'),
+            rpc_url=bytes('https://rpc1.newchain.newtonproject.org/', encoding='utf-8'),
             token_id=0,
             chain_id=1007
         )
@@ -56,11 +58,11 @@ class Command(BaseCommand):
         wallet_address = a.address
         print('wallet_address:', wallet_address)
 
-        w3 = newton_web3.get_web3(1007)
+        w3 = newton_web3.get_web3('https://rpc1.newchain.newtonproject.org/')
         message = 'abcdefgjkqwerrttyuio'
         signable_message = encode_defunct(text=message)
         signed_message = w3.eth.account.sign_message(signable_message, private_key=wallet_private_key)
-        key_id = '39d9403f502e6c4d14fab1733a27b6712029a392f34462b92a3f8a1b626cc972'
+        key_id = 'ab0282f22fc421c5bfe60a77b92692a06af7a14ae205ea424348352d368ae9d7'
         prime = 'AMrE1jd2GZVUUUqf2+vKNCrBCiZhUKIeVt7cOb75y9/OFJqWOt+fT70fW84Q8q/ylM9frco77+XPlicOY0czYOs='
         peer_swap_key = 'Lws4ROYFY8LBhlrLFWJNy9CAhF7xDvavsK6BRwr28DhsMu65FEY1bbJwJNVM0Y+m/tconbq7TyCZe32syj03mw=='
         getParams = GetParams(

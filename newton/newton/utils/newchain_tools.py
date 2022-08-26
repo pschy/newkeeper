@@ -58,7 +58,7 @@ class Transaction(rlp.Serializable):
     ]
 
 
-chainID = settings.DEFAULT_CHAIN_ID
+chainID = settings.CHAIN_ID
 PREFIX = 'NEW'
 
 
