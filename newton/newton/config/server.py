@@ -12,6 +12,8 @@ BASE_URL = 'http://127.0.0.1:8000'
 ENV_DEV = True
 DOMAIN = '127.0.0.1'
 
+IPFS_HOST = 'https://ipfs.wavemall.io/ipfs/'
+
 # Cache
 DEFAULT_CACHE_DB = 1
 REDIS_CACHE_DB = DEFAULT_CACHE_DB
