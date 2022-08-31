@@ -66,12 +66,12 @@ class Command(BaseCommand):
     def api_test(self):
         try:
             print('Step1: mint nft for permission')
-            # tokenId = self.mint_nft()
-            # if tokenId < 0:
-            #     print('mint nft error')
-            #     return
-            # else:
-            #     print('mint nft tokenId: %s' % str(tokenId))
+            tokenId = self.mint_nft()
+            if tokenId < 0:
+                print('mint nft error')
+                return
+            else:
+                print('mint nft tokenId: %s' % str(tokenId))
 
             print()
             print('Step2: call api for swap key')
