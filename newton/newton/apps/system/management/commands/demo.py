@@ -118,7 +118,7 @@ class Command(BaseCommand):
             signable_message = encode_defunct(text=message)
             signed_message = w3.eth.account.sign_message(signable_message, private_key=self.user['private_key'])
 
-            private_key = security.aes_encrypt(shared_secret[2:32], encrypt_key)
+            private_key = security.aes_encrypt(shared_secret[2:34], encrypt_key)
             bindParams = BindParams(
                 key_id=bytes(keyId, encoding='utf-8'),
                 r=signed_message.r,
@@ -179,7 +179,7 @@ class Command(BaseCommand):
                 return
             shared_secret = dh_client.getSharedSecret(server_public_key)
             shared_secret = hex(shared_secret)
-            encrypt_key = security.aes_decrypt(shared_secret[2:32], private_key)
+            encrypt_key = security.aes_decrypt(shared_secret[2:34], private_key)
             print('encrypt_key: %s' % encrypt_key)
         except Exception as e:
             print("error: %s" % str(e))

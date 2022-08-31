@@ -99,7 +99,7 @@ def api_bind(request, version):
         if not res:
             return http.JsonErrorResponse(error_message=errmsg)
 
-        encrypt_key = security.aes_decrypt(key_obj.encrypt_key[2:32], private_key)
+        encrypt_key = security.aes_decrypt(key_obj.encrypt_key[2:34], private_key)
         key_obj.contract_address = contract_address.lower()
         key_obj.nft_contract_address = nft_contract_address.lower()
         key_obj.token_id = str(token_id)
@@ -111,7 +111,7 @@ def api_bind(request, version):
 
         return http.JsonSuccessResponse()
     except Exception as e:
-        logger.exception("fail to check: %s" % str(e))
+        logger.exception("fail to bind: %s" % str(e))
         return http.JsonErrorResponse()
 
 
@@ -160,10 +160,10 @@ def api_get(request, version):
 
         data = {
             'node_swap_key': node_swap_key,
-            'private_key': security.aes_encrypt(node_secret[2:32], key_obj.encrypt_key)
+            'private_key': security.aes_encrypt(node_secret[2:34], key_obj.encrypt_key)
         }
 
         return http.JsonSuccessResponse(data=data)
     except Exception as e:
-        logger.exception("fail to check: %s" % str(e))
+        logger.exception("fail to get key: %s" % str(e))
         return http.JsonErrorResponse()
