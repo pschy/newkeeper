@@ -2,7 +2,7 @@
 """
 Cryptography, address, transaction manipulation for newchain.
 """
-__copyright__ = """ Copyright (c) 2022 Newton Foundation. All rights reserved."""
+__copyright__ = """ Copyright (c) 2022 newkeeper.org. All rights reserved."""
 __version__ = '$Rev$'
 __author__ = 'newkeeper'
 

@@ -3,7 +3,7 @@
 Form validation decorator.
 """
 
-__copyright__ = """ Copyright (c) 2018 Newton Foundation. All rights reserved."""
+__copyright__ = """ Copyright (c) 2022 newkeeper.org. All rights reserved."""
 __version__ = '$Rev$'
 __author__ = 'xiawu@zeuux.org'
 

@@ -3,7 +3,7 @@
 System status API
 """
 
-__copyright__ = """ Copyright (c) 2018 Newton Foundation. All rights reserved."""
+__copyright__ = """ Copyright (c) 2022 newkeeper.org. All rights reserved."""
 __version__ = '$Rev$'
 __author__ = 'yanhang@diynova.com'
 
