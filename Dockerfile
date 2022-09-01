@@ -3,7 +3,7 @@ RUN echo -e http://mirrors.ustc.edu.cn/alpine/v3.16/main/ > /etc/apk/repositorie
 
 RUN mkdir -p /data/www/newkeeper
 ADD . /data/www/newkeeper
-WORKDIR /data/www/newkeeper/newton
+WORKDIR /data/www/newkeeper/newkeeper
 
 RUN pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 RUN python manage.py migrate
