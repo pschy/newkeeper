@@ -24,11 +24,6 @@ class Language(Enum):
     ENGLISH = 2
 
 
-class SystemServiceStatus(Enum):
-    MAINTAIN = 0
-    NORMAL = 1
-
-
 class StatusCode(Enum):
     INVALID = 0
     AVAILABLE = 1

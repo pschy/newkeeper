@@ -36,7 +36,7 @@ CACHES = {
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'newkeeper'
+        'NAME': 'db.newkeeper'
     },
 }
 

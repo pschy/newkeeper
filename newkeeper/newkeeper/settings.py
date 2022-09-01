@@ -11,7 +11,7 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-PROJECT_ROOT = os.path.join(BASE_DIR, "newton")
+PROJECT_ROOT = os.path.join(BASE_DIR, "newkeeper")
 
 # Add the individual app package path
 sys.path.insert(0, os.path.join(PROJECT_ROOT, "apps"))
@@ -19,16 +19,10 @@ sys.path.insert(0, PROJECT_ROOT)
 
 sys.modules['eth_keys.constants'] = __import__('newchain_keys_constants')
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-!nep+!kev)6+lq%1nq!k%97^w&c1^9mh*e79uj3^u&)9e=4k2!'
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
-
-TEMPLATE_DEBUG = False
-
 ALLOWED_HOSTS = ['*']
 
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = 'django-insecure-!nep+!kev)6+lq%1nq!k%97^w&c1^9mh*e79uj3^u&)9e=4k2!'
 
 # Application definition
 
@@ -41,16 +35,16 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'werkzeug_debugger_runserver',
     'django_extensions',
-    'newton',
+    'newkeeper',
     # apps
     'api',
     'system',
     'key',
 ]
 
-ROOT_URLCONF = 'newton.urls'
+ROOT_URLCONF = 'newkeeper.urls'
 
-WSGI_APPLICATION = 'newton.wsgi.application'
+WSGI_APPLICATION = 'newkeeper.wsgi.application'
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.0/topics/i18n/

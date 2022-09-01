@@ -92,9 +92,9 @@ def api_bind(request, version):
         vrs = (sign_v, sign_r, sign_s)
         sign_message = encode_defunct(text=message)
         hex_address = w3.eth.account.recover_message(sign_message, vrs=vrs)
-        # print('hex_address:', hex_address)
         if not hex_address:
             return http.JsonErrorResponse(error_message='recover message error')
+
         res, errmsg = key_services.check_permission(hex_address, key_id, token_id, rpc_url, nft_contract_address, contract_address)
         if not res:
             return http.JsonErrorResponse(error_message=errmsg)
@@ -139,6 +139,8 @@ def api_get(request, version):
         key_obj = key_models.KeyList.objects.filter(key_id=key_id).first()
         if not key_obj:
             return http.JsonErrorResponse(error_message='key is not exist')
+        if key_obj.bind_status == 0:
+            return http.JsonErrorResponse(error_message='key is not bind')
 
         rpc_url = key_obj.rpc_url
         w3 = newton_web3.get_web3(rpc_url)

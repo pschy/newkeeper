@@ -19,19 +19,3 @@ CHAIN_NAMES = {
     1007: 'Newton Testnet',
     1012: 'Newton',
 }
-
-ACTIVITY_EVENT_CHOICES = (
-    ("MINTED", "MINTED"),
-    ("LIST", "LIST"),
-    ("BID", "BID"),
-    ("SALE", "SALE"),
-    ("TRANSFER", "TRANSFER"),
-)
-
-ACTIVITY_EVENT_NAMES = {
-    "MINTED": "Mint",
-    "LIST": "List",
-    "BID": "Bid",
-    "SALE": "Sale",
-    "TRANSFER": "Transfer",
-}
