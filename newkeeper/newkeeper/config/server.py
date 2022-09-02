@@ -42,6 +42,7 @@ DATABASES = {
 
 CURRENT_NET = 'TestNet'
 CHAIN_ID = 1007
+NEWCHAIN_CHAIN_IDS = [1007, 1012]
 
 # Logging
 system_string = platform.system()

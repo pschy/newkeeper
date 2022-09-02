@@ -17,8 +17,6 @@ PROJECT_ROOT = os.path.join(BASE_DIR, "newkeeper")
 sys.path.insert(0, os.path.join(PROJECT_ROOT, "apps"))
 sys.path.insert(0, PROJECT_ROOT)
 
-sys.modules['eth_keys.constants'] = __import__('newchain_keys_constants')
-
 ALLOWED_HOSTS = ['*']
 
 # SECURITY WARNING: keep the secret key used in production secret!

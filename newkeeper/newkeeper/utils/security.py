@@ -7,7 +7,6 @@ __copyright__ = """ Copyright (c) 2022 newkeeper.org. All rights reserved."""
 __version__ = '$Rev$'
 __author__ = 'newkeeper'
 
-from email.mime import base
 import re
 import sys
 import random

@@ -4,22 +4,18 @@ __copyright__ = """ Copyright (c) 2022 newkeeper.org. All rights reserved."""
 __version__ = '$Rev$'
 __author__ = 'newkeeper'
 
+import sys
 import logging
+import importlib
 from utils import http
 from django.conf import settings
-import os
 import json
 from . import forms as key_forms
 from . import models as key_models
-from . import services as key_services
-from django.http import HttpResponseNotFound
-from eth_account.messages import encode_defunct, encode_structured_data
-from utils import newton_web3
-from utils import ecc_tools, newchain_tools, security
+from . import rlp_services
+from utils import security
 from openid.dh import DiffieHellman
 from openid.constants import DEFAULT_DH_GENERATOR
-from openid import cryptutil
-
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +58,7 @@ def api_bind(request, version):
         sign_data = request.POST.get('sign_data', None)
         if not sign_data:
             return http.JsonErrorResponse(error_message='validate error')
-        form_data = key_services.decode_bind_params(sign_data)
+        form_data = rlp_services.decode_bind_params(sign_data)
         if not form_data:
             return http.JsonErrorResponse(error_message='rlp data error')
         form = key_forms.BindForm(form_data)
@@ -81,6 +77,12 @@ def api_bind(request, version):
         sign_s = form.cleaned_data["sign_s"]
         sign_v = form.cleaned_data["sign_v"]
         message = form.cleaned_data["sign_message"]
+
+        if chain_id in settings.NEWCHAIN_CHAIN_IDS:
+            sys.modules['eth_keys.constants'] = __import__('newchain_keys_constants')
+        from utils import newton_web3
+        from . import services as key_services
+        from eth_account.messages import encode_defunct
 
         key_obj = key_models.KeyList.objects.filter(key_id=key_id).first()
         if not key_obj:
@@ -120,7 +122,7 @@ def api_get(request, version):
         sign_data = request.POST.get('sign_data', None)
         if not sign_data:
             return http.JsonErrorResponse(error_message='validate error')
-        form_data = key_services.decode_get_params(sign_data)
+        form_data = rlp_services.decode_get_params(sign_data)
         if not form_data:
             return http.JsonErrorResponse(error_message='rlp data error')
         form = key_forms.GetForm(form_data)
@@ -140,7 +142,14 @@ def api_get(request, version):
         if not key_obj:
             return http.JsonErrorResponse(error_message='key is not exist')
         if key_obj.bind_status == 0:
-            return http.JsonErrorResponse(error_message='key is not bind')
+            return http.JsonErrorResponse(error_message='key have not bound')
+
+        chain_id = int(key_obj.chain_id)
+        if chain_id in settings.NEWCHAIN_CHAIN_IDS:
+            sys.modules['eth_keys.constants'] = __import__('newchain_keys_constants')
+        from utils import newton_web3
+        from . import services as key_services
+        from eth_account.messages import encode_defunct
 
         rpc_url = key_obj.rpc_url
         w3 = newton_web3.get_web3(rpc_url)
