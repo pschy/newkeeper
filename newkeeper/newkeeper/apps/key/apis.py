@@ -10,10 +10,13 @@ import importlib
 from utils import http
 from django.conf import settings
 import json
-from . import forms as key_forms
-from . import models as key_models
-from . import rlp_services
-from utils import security
+from utils import newton_web3, security
+from eth_account.messages import encode_defunct
+from newchain_account.messages import encode_defunct as newchain_encode_defunct
+from key import forms as key_forms
+from key import models as key_models
+from key import rlp_services
+from key import services as key_services
 from openid.dh import DiffieHellman
 from openid.constants import DEFAULT_DH_GENERATOR
 
@@ -78,26 +81,24 @@ def api_bind(request, version):
         sign_v = form.cleaned_data["sign_v"]
         message = form.cleaned_data["sign_message"]
 
-        if chain_id in settings.NEWCHAIN_CHAIN_IDS:
-            sys.modules['eth_keys.constants'] = __import__('newchain_keys_constants')
-        from utils import newton_web3
-        from . import services as key_services
-        from eth_account.messages import encode_defunct
-
         key_obj = key_models.KeyList.objects.filter(key_id=key_id).first()
         if not key_obj:
             return http.JsonErrorResponse(error_message='key is not exist')
         if key_obj.bind_status == 1:
             return http.JsonErrorResponse(error_message='this key have bound')
 
-        w3 = newton_web3.get_web3(rpc_url)
+        w3 = newton_web3.get_web3(rpc_url, chain_id)
+        if chain_id in settings.NEWCHAIN_CHAIN_IDS:
+            sign_message = newchain_encode_defunct(text=message)
+        else:
+            sign_message = encode_defunct(text=message)
+
         vrs = (sign_v, sign_r, sign_s)
-        sign_message = encode_defunct(text=message)
         hex_address = w3.eth.account.recover_message(sign_message, vrs=vrs)
         if not hex_address:
             return http.JsonErrorResponse(error_message='recover message error')
 
-        res, errmsg = key_services.check_permission(hex_address, key_id, token_id, rpc_url, nft_contract_address, contract_address)
+        res, errmsg = key_services.check_permission(w3, hex_address, key_id, token_id, rpc_url, nft_contract_address, contract_address)
         if not res:
             return http.JsonErrorResponse(error_message=errmsg)
 
@@ -145,21 +146,18 @@ def api_get(request, version):
             return http.JsonErrorResponse(error_message='key have not bound')
 
         chain_id = int(key_obj.chain_id)
-        if chain_id in settings.NEWCHAIN_CHAIN_IDS:
-            sys.modules['eth_keys.constants'] = __import__('newchain_keys_constants')
-        from utils import newton_web3
-        from . import services as key_services
-        from eth_account.messages import encode_defunct
-
         rpc_url = key_obj.rpc_url
-        w3 = newton_web3.get_web3(rpc_url)
+        w3 = newton_web3.get_web3(rpc_url, chain_id)
+        if chain_id in settings.NEWCHAIN_CHAIN_IDS:
+            sign_message = newchain_encode_defunct(text=message)
+        else:
+            sign_message = encode_defunct(text=message)
+
         vrs = (sign_v, sign_r, sign_s)
-        sign_message = encode_defunct(text=message)
         hex_address = w3.eth.account.recover_message(sign_message, vrs=vrs)
         if not hex_address:
             return http.JsonErrorResponse(error_message='recover message error')
-
-        res, errmsg = key_services.check_permission(hex_address, key_obj.key_id, key_obj.token_id, 
+        res, errmsg = key_services.check_permission(w3, hex_address, key_obj.key_id, key_obj.token_id, 
                 key_obj.rpc_url, key_obj.nft_contract_address, key_obj.contract_address)
         if not res:
             return http.JsonErrorResponse(error_message=errmsg)

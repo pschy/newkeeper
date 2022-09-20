@@ -1,10 +1,10 @@
 from django.core.management.base import BaseCommand
 from utils import newton_web3, security
 from utils import ecc_tools, newchain_tools
-from eth_account.messages import encode_defunct
+from newchain_account.messages import encode_defunct
 import binascii
-from eth_account import Account
-from key.services import BindParams, GetParams
+from newchain_account import Account
+from key.rlp_services import BindParams, GetParams
 import rlp
 
 class Command(BaseCommand):
@@ -27,7 +27,8 @@ class Command(BaseCommand):
         wallet_address = a.address
         print('wallet_address:', wallet_address)
 
-        w3 = newton_web3.get_web3(1007)
+        rpc_url = 'https://rpc1.newchain.newtonproject.org/'
+        w3 = newton_web3.get_web3(rpc_url, 1007)
         message = 'abcdefgjkqwerrttyuio'
         signable_message = encode_defunct(text=message)
         signed_message = w3.eth.account.sign_message(signable_message, private_key=wallet_private_key)
@@ -35,7 +36,7 @@ class Command(BaseCommand):
         key_id = 'ab0282f22fc421c5bfe60a77b92692a06af7a14ae205ea424348352d368ae9d7'
         encrypt_key = 'd41d8cd98f00b204e9800998ecf8427e'
         shared_secret = '0x7f1f94707dddd6cd5d7e0092b0031c32ea55519265914806b3c60187c271cb848fb69deb82f895ef37392e9d5f3b7c3ac230265897b77ff15beb110bf082fcf8'
-        private_key = security.aes_encrypt(shared_secret[2:32], encrypt_key)
+        private_key = security.aes_encrypt(shared_secret[2:34], encrypt_key)
         bindParams = BindParams(
             key_id=bytes(key_id, encoding='utf-8'),
             r=signed_message.r,
@@ -45,7 +46,7 @@ class Command(BaseCommand):
             message=bytes(message, encoding='utf-8'),
             contract_address=bytes('0x66fE876AD7C00319aF3030D3736A6D921CDF744B', encoding='utf-8'),
             nft_contract_address=bytes('0xFD1d4413030c39758Afd48b34b839BFe265FD9D9', encoding='utf-8'),
-            rpc_url=bytes('https://rpc1.newchain.newtonproject.org/', encoding='utf-8'),
+            rpc_url=bytes(rpc_url, encoding='utf-8'),
             token_id=0,
             chain_id=1007
         )

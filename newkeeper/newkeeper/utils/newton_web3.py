@@ -1,6 +1,7 @@
 from web3 import Web3 as SourceWeb3
+from newchain_web3 import Web3 as NewchainWeb3
+from newchain_web3.middleware import geth_poa_middleware
 from django.conf import settings
-from web3.middleware import geth_poa_middleware
 import json
 import requests
 import time
@@ -8,16 +9,18 @@ import time
 # sys.modules['web3.middleware.validation'] = __import__('newchain_web3_middleware_validation')
 
 
-def get_web3(rpc_url):
-    w3 = SourceWeb3(SourceWeb3.HTTPProvider(rpc_url))
-    # inject the poa compatibility middleware to the innermost layer
-    w3.middleware_onion.inject(geth_poa_middleware, layer=0)
+def get_web3(rpc_url, chain_id):
+    if chain_id in settings.NEWCHAIN_CHAIN_IDS:
+        w3 = NewchainWeb3(NewchainWeb3.HTTPProvider(rpc_url))
+        # inject the poa compatibility middleware to the innermost layer
+        w3.middleware_onion.inject(geth_poa_middleware, layer=0)
+    else:
+        w3 = SourceWeb3(SourceWeb3.HTTPProvider(rpc_url))
     return w3
 
 
-def get_contracts_balance(rpc_url, wallet_address, contract_address):
+def get_contracts_balance(w3, rpc_url, wallet_address, contract_address):
     wallet_address = wallet_address.lower()
-    w3 = get_web3(rpc_url)
     func_sign = w3.keccak(text='balanceOf(address)').hex()
     func = func_sign[0:10] + "000000000000000000000000" + wallet_address[2:]
 
@@ -45,9 +48,8 @@ def _post_call(url, payload):
     return content
 
 
-def has_permission(rpc_url, wallet_address, token_id, key_id, contract_address):
+def has_permission(w3, rpc_url, wallet_address, token_id, key_id, contract_address):
     wallet_address = wallet_address.lower()
-    w3 = get_web3(rpc_url)
     func_sign = w3.keccak(text='hasPermission(uint256,bytes32,address)').hex()
     func = func_sign[0:10]
     token_id_hex = w3.toHex(token_id)[2:]
@@ -72,8 +74,7 @@ def has_permission(rpc_url, wallet_address, token_id, key_id, contract_address):
     return has_permission
 
 
-def is_expired(rpc_url, token_id, contract_address):
-    w3 = get_web3(rpc_url)
+def is_expired(w3, rpc_url, token_id, contract_address):
     func_sign = w3.keccak(text='tokenURI(uint256)').hex()
     token_id_hex = w3.toHex(token_id)[2:]
     func = func_sign[0:10] + token_id_hex.zfill(64)
