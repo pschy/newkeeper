@@ -1,0 +1,16 @@
+libxml2-dev
+libxslt-dev
+subversion
+nginx
+supervisor
+python-virtualenv
+python-pip
+python-dev
+python3.8-dev
+redis-server
+fabric
+libjpeg-dev
+libcurl4-openssl-dev
+libgeos-dev
+libmysqlclient-dev
+libgmp3-dev
