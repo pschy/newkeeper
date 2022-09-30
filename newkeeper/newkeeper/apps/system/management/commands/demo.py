@@ -11,13 +11,10 @@ from django.conf import settings
 from utils import ecc_tools, security
 from web3 import Web3, HTTPProvider
 from eth_abi import encode_abi
-from eth_abi.packed import encode_abi_packed
-from sha3 import keccak_256
-from fastecdsa import curve, ecdsa, keys
-from utils import newchain_tools, newton_web3
+from utils import newton_web3
 import rlp
 from openid.dh import DiffieHellman
-from openid.constants import DEFAULT_DH_GENERATOR, DEFAULT_DH_MODULUS
+from openid.constants import DEFAULT_DH_GENERATOR
 from openid import cryptutil
 from ssl import RAND_bytes
 from eth_account import Account as EthAccount
@@ -113,7 +110,7 @@ class Command(BaseCommand):
             print('wallet_address:', wallet_address)
 
             rpc_url = 'https://rpc1.newchain.newtonproject.org/'
-            w3 = newton_web3.get_web3(rpc_url)
+            w3 = newton_web3.get_web3(rpc_url, 1007)
             message = 'asdf23fef34t45t54dfsfsd'
             signable_message = encode_defunct(text=message)
             signed_message = w3.eth.account.sign_message(signable_message, private_key=self.user['private_key'])
